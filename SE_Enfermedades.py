@@ -21,28 +21,28 @@ def abrir_ventana_experto():
         if Grupo1_var.get():
             sintoma = "Grupo 1"
         else:
-            print("El Checkbutton dolor cuadro_fiebre_tos_var no está seleccionado.")
+            print("El Checkbutton Grupo 1 no está seleccionado.")
         if Grupo2_var.get():
             sintoma = "Grupo 2"
         else:
-            print("El Checkbutton dolor cuadro_dolormuscular_var no está seleccionado.")
+            print("El Checkbutton Grupo 2 no está seleccionado.")
         if Grupo3_var.get():
             sintoma = "Grupo 3"
         else:
-            print("El Checkbutton dolor cuadro_nauseas_var no está seleccionado.")
+            print("El Checkbutton Grupo 3 no está seleccionado.")
         if Grupo4_var.get():
             sintoma = "Grupo 4"
         else:        
-            print("Pon algo")
+            print("Haz una seleccion")
        
         tiempo = combo_tiempo.get()
         respuesta = text_respuesta.get("0.0", tk.END)
         explicacion = text_explicacion.get("0.0", tk.END)
 
         conexion = mysql.connector.connect(user='root',password='root',
-                                   host='localhost',
-                                   database='se_database',
-                                   port='3306')
+                                        host='localhost',
+                                        database='se_database',
+                                        port='3306')
         print(conexion)
         cursor = conexion.cursor()
 
@@ -66,7 +66,7 @@ def abrir_ventana_experto():
     def cargar_imagen():
 
         global imagen_blob
-        ruta_imagen = filedialog.askopenfilename(title="Seleccionar Imagen", filetypes=[("Archivos de imagen", "*.png;*.jpg;*.jpeg;*.gif")])
+        ruta_imagen = filedialog.askopenfilename(title="Seleccionar Imagen", filetypes=[("Archivos de imagen", "*.webp;*.png;*.jpg;*.jpeg;*.gif")])
 
         if ruta_imagen:
             imagen = Image.open(ruta_imagen)
