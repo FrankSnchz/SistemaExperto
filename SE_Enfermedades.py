@@ -218,7 +218,7 @@ def abrir_ventana_usuario():
 # ----------------------------INTERFAZ DE USUARIO NORMAL-----------------------------#
 
 ventana = tk.Tk()
-ventana.title("Sistema Experto para la Detección de Enfermedades Respiratorias Comunes")
+ventana.title("Sistema Experto para la Detección de Enfermedades Comunes")
 ancho_ventana = 625
 alto_ventana = 550
 
@@ -237,7 +237,7 @@ ventana.geometry(f"{ancho_ventana}x{alto_ventana}+{x_pos}+{y_pos}")
 fuente_Title = ('Times', 16)  # Tipo de letra Arial, tamaño 16
 
 # Titulo
-etiqueta_titulo = ttk.Label(ventana, text="Sistema Experto de Enfermedades Respiratorias Comunes:", font=fuente_Title)
+etiqueta_titulo = ttk.Label(ventana, text="Sistema Experto de Enfermedades Comunes:", font=fuente_Title)
 etiqueta_titulo.grid(row=0, column = 0, columnspan=2, pady=10)
 
 # Configurar las columnas para expandirse
@@ -310,12 +310,106 @@ combo_tiempo.grid(row=5, column=0, padx=(310,0), pady=10, sticky ="w")
 text_respuesta = scrolledtext.ScrolledText(ventana, wrap=tk.WORD, width=42, height=5, state=tk.DISABLED)
 text_respuesta.grid(row=7, column=0, padx=(20,0), pady=10, sticky ="w")
 
+
 # Crear la segunda área de texto debajo de la primera
 text_explicacion = scrolledtext.ScrolledText(ventana, wrap=tk.WORD, width=42, height=5, state=tk.DISABLED)
 text_explicacion.grid(row=8, column=0, padx=(20,0), pady=10, sticky ="w")
 
 
-def comparar_datos():    
+# METODO PARA MOSTRAR LA EXPLICACION
+def mostrar_explicacion():    
+    edad = combo_edad.get()
+    factor_riesgo = combo_factores_riesgo.get()
+
+    sintoma =""
+
+    if Grupo1_var.get():
+        sintoma = "Grupo1"
+    else:
+        print("El Checkbutton dolor cuadro_fiebre_tos_var no está seleccionado.")
+    if Grupo2_var.get():
+        sintoma = "Grupo2"
+    else:
+        print("El Checkbutton dolor cuadro_dolormuscular_var no está seleccionado.")
+    if Grupo3_var.get():
+        sintoma = "Grupo3"
+    else:
+        print("El Checkbutton dolor cuadro_nauseas_var no está seleccionado.")
+    if Grupo4_var.get():
+        sintoma = "Grupo4"
+    else:        
+        print("Pon algo")
+
+    tiempo = combo_tiempo.get()
+
+    conexion2 = mysql.connector.connect(user='root',password='root',
+                                    host='localhost',
+                                    database='se_database',
+                                    port='3306')
+    print(conexion2)
+    cursor2 = conexion2.cursor()
+
+    valores = (edad, factor_riesgo, sintoma, tiempo)
+
+    # Crea la consulta SQL para rescatar una imagen
+    consulta_existencia = "SELECT explicacion FROM enf WHERE edad = %s AND factor_riesgo = %s AND sintomas = %s AND tiempo = %s"
+
+    # Ejecuta la consulta con los valores
+    cursor2.execute(consulta_existencia, valores)
+
+    # Verificar si hay algún resultado
+    resultados = cursor2.fetchall()
+
+    # Limpiar el contenido actual del text_respuesta
+    text_explicacion.config(state=tk.NORMAL)
+    text_explicacion.delete('1.0', tk.END)
+
+    for resultado in resultados:
+        explicacion, = resultado
+        print(explicacion)
+
+        # Establecer un valor inicial
+        text_explicacion.insert(tk.END, f"Según los datos ingresados, puede tener: {explicacion}\nNota. Se recomienda que busque atención médica para un diagnóstico adecuado y un tratamiento oportuno.")
+        break
+    else:
+        print("No hay nada")
+
+    # Confirma la inserción de datos en la base de datos
+    conexion2.commit()
+
+    # Cierra el cursor y la conexión
+    cursor2.close()
+    conexion2.close()
+
+    # Configurar el text_respuesta como de solo lectura
+    text_explicacion.config(state=tk.DISABLED)
+
+
+
+# LIMPIA LAS CASILLAS CUANDO SE QUIERE REALIZAR OTRA CONSULTA
+def limpiar_casillas():
+    combo_factores_riesgo.set("")
+    combo_edad.set("")
+    combo_tiempo.set("")
+    Grupo1_var.set(False)
+    Grupo2_var.set(False)
+    Grupo3_var.set(False)
+    Grupo4_var.set(False)
+    text_explicacion.config(state=tk.NORMAL)
+    text_explicacion.delete('1.0', tk.END)
+    text_explicacion.insert(tk.END, "")
+    text_explicacion.config(state=tk.DISABLED)
+    text_respuesta.config(state=tk.NORMAL)
+    text_respuesta.delete('1.0', tk.END)
+    text_respuesta.insert(tk.END, "")
+    text_respuesta.config(state=tk.DISABLED)
+
+
+
+
+
+# MÉTODO PARA MOSTRAR LA RESPUESTA
+def obtener_consulta():    
     edad = combo_edad.get()
     factor_riesgo = combo_factores_riesgo.get()
 
@@ -357,11 +451,19 @@ def comparar_datos():
     cursor2.execute(consulta_existencia, valores)
 
     # Verificar si hay algún resultado
-    resultado = cursor2.fetchone()
+    resultados = cursor2.fetchall()
 
-    if resultado is not None:
-        respuestaa = resultado[0]
-        print(respuestaa)
+    # Limpiar el contenido actual del text_respuesta
+    text_respuesta.config(state=tk.NORMAL)
+    text_respuesta.delete('1.0', tk.END)
+
+    for resultado in resultados:
+        enfermedad, = resultado
+        print(enfermedad)
+
+        # Establecer un valor inicial
+        text_respuesta.insert(tk.END, f"Según los datos ingresados, puede tener: {enfermedad}\nNota. Se recomienda que busque atención médica para un diagnóstico adecuado y un tratamiento oportuno.")
+        break
     else:
         print("No hay nada")
 
@@ -372,19 +474,14 @@ def comparar_datos():
     cursor2.close()
     conexion2.close()
 
+    # Configurar el text_respuesta como de solo lectura
+    text_respuesta.config(state=tk.DISABLED)
+
+
+
 
 ruta_imagen = "imagen.jpg"
 
-"""
-if dato is not None:
-    imagen_bytes = dato[0]
-    
-    # Cargar la imagen con Pillow
-    imagen_pillow = Image.open(BytesIO(imagen_bytes))
-else:
-    print("La consulta no devolvió ningún resultado.")
-    # Cargar la imagen con Pillow
-    """
 imagen_pillow = Image.open(ruta_imagen)
 
     
@@ -398,19 +495,19 @@ imagen_redimensionada = imagen_pillow.resize(nuevo_tamano)
 imagen_tk = ImageTk.PhotoImage(imagen_redimensionada)
 
 # Boton Obtener consulta
-boton_consultar = ttk.Button(ventana, text="Obtener consulta")
+boton_consultar = ttk.Button(ventana, text="Obtener consulta", command=obtener_consulta)
 boton_consultar.grid(row=6, column=0, sticky ="w", pady= 5, padx=(220,0))
 
 # Boton Ver Explicación
-boton_consultar = ttk.Button(ventana, text="Ver explicación", command=comparar_datos)
+boton_consultar = ttk.Button(ventana, text="Ver explicación", command=mostrar_explicacion)
 boton_consultar.grid(row=6, column=0, sticky ="e", pady= 5, padx=(0,200))
 
 # Crear un widget Label para mostrar la imagen
 etiqueta_imagen = tk.Label(ventana, image=imagen_tk)
 etiqueta_imagen.grid(row=7, rowspan=2, column=0, padx=(380,0))
 
-# Botón para abrir modo usuario
-boton_realizar_consulta = ttk.Button(ventana, text="Realizar otra consulta")
+# Botón realizar otra consulta
+boton_realizar_consulta = ttk.Button(ventana, text="Realizar otra consulta",command=limpiar_casillas)
 boton_realizar_consulta.grid(row=9, column=0, padx=(20,0), sticky ="w")
  
 # Botón para abrir ventana experto
