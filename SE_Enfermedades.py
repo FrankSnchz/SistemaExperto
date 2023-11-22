@@ -1,4 +1,5 @@
 from io import BytesIO
+import io
 import tkinter as tk
 from tkinter import PhotoImage, scrolledtext
 from tkinter import filedialog
@@ -19,15 +20,15 @@ def abrir_ventana_experto():
         sintoma =""
 
         if Grupo1_var.get():
-            sintoma = "Grupo 1"
+            sintoma = "Grupo1"
         else:
             print("El Checkbutton Grupo 1 no está seleccionado.")
         if Grupo2_var.get():
-            sintoma = "Grupo 2"
+            sintoma = "Grupo2"
         else:
             print("El Checkbutton Grupo 2 no está seleccionado.")
         if Grupo3_var.get():
-            sintoma = "Grupo 3"
+            sintoma = "Grupo3"
         else:
             print("El Checkbutton Grupo 3 no está seleccionado.")
         if Grupo4_var.get():
@@ -49,7 +50,7 @@ def abrir_ventana_experto():
         valores = (edad, factor_riesgo, sintoma, tiempo, respuesta, explicacion, imagen_blob)
 
         # Crea la consulta SQL para insertar un nuevo registro
-        consulta = "INSERT INTO enf(edad, factor_riesgo, sintomas, tiempo, respuesta, explicacion, img) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+        consulta = "INSERT INTO enf(edad, factor_riesgo, sintomas, tiempo, resp, explicacion, img) VALUES (%s,%s,%s,%s,%s,%s,%s)"
 
         # Ejecuta la consulta con los valores
         valores = (edad, factor_riesgo, sintoma, tiempo, respuesta, explicacion, imagen_blob)
@@ -321,19 +322,19 @@ def comparar_datos():
     sintoma =""
 
     if Grupo1_var.get():
-        sintoma = "Grupo 1"
+        sintoma = "Grupo1"
     else:
         print("El Checkbutton dolor cuadro_fiebre_tos_var no está seleccionado.")
     if Grupo2_var.get():
-        sintoma = "Grupo 2"
+        sintoma = "Grupo2"
     else:
         print("El Checkbutton dolor cuadro_dolormuscular_var no está seleccionado.")
     if Grupo3_var.get():
-        sintoma = "Grupo 3"
+        sintoma = "Grupo3"
     else:
         print("El Checkbutton dolor cuadro_nauseas_var no está seleccionado.")
     if Grupo4_var.get():
-        sintoma = "Grupo 4"
+        sintoma = "Grupo4"
     else:        
         print("Pon algo")
 
@@ -349,8 +350,8 @@ def comparar_datos():
 
     valores = (edad, factor_riesgo, sintoma, tiempo)
 
-    # Crea la consulta SQL para insertar un nuevo registro
-    consulta_existencia = "SELECT * FROM enf WHERE edad = %s AND factor_riesgo = %s AND sintomas = %s AND tiempo = %s"
+    # Crea la consulta SQL para rescatar una imagen
+    consulta_existencia = "SELECT resp FROM enf WHERE edad = %s AND factor_riesgo = %s AND sintomas = %s AND tiempo = %s"
 
     # Ejecuta la consulta con los valores
     cursor2.execute(consulta_existencia, valores)
@@ -358,8 +359,9 @@ def comparar_datos():
     # Verificar si hay algún resultado
     resultado = cursor2.fetchone()
 
-    if resultado:
-        print("Los valores ya existen en la base de datos.")
+    if resultado is not None:
+        respuestaa = resultado[0]
+        print(respuestaa)
     else:
         print("No hay nada")
 
