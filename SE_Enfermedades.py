@@ -46,7 +46,7 @@ def abrir_ventana_experto():
                                         port='3306')
         print(conexion)
         cursor = conexion.cursor()
-
+        """
         valores = (edad, factor_riesgo, sintoma, tiempo, respuesta, explicacion, imagen_blob)
 
         # Crea la consulta SQL para insertar un nuevo registro
@@ -55,6 +55,16 @@ def abrir_ventana_experto():
         # Ejecuta la consulta con los valores
         valores = (edad, factor_riesgo, sintoma, tiempo, respuesta, explicacion, imagen_blob)
         cursor.execute(consulta, valores)
+        """ 
+
+        # Crea la consulta SQL para insertar un nuevo registro        
+        consulta = "UPDATE enf SET img = %s WHERE resp = %s" 
+        enfermedad = "Diabetes"
+        # Ejecuta la consulta con los valores
+        valores = (imagen_blob, enfermedad)
+        cursor.execute(consulta, valores)
+
+
 
         # Confirma la inserción de datos en la base de datos
         conexion.commit()
@@ -407,7 +417,6 @@ def limpiar_casillas():
 
 
 
-
 # MÉTODO PARA MOSTRAR LA RESPUESTA
 def obtener_consulta():    
     edad = combo_edad.get()
@@ -466,6 +475,81 @@ def obtener_consulta():
         break
     else:
         print("No hay nada")
+
+    # Confirma la inserción de datos en la base de datos
+    conexion2.commit()
+
+    # Cierra el cursor y la conexión
+    cursor2.close()
+    conexion2.close()
+
+    # Configurar el text_respuesta como de solo lectura
+    text_respuesta.config(state=tk.DISABLED)
+
+
+
+
+
+
+# MÉTODO PARA MOSTRAR LA RESPUESTA
+def obtener_consulta():    
+    edad = combo_edad.get()
+    factor_riesgo = combo_factores_riesgo.get()
+
+    sintoma =""
+
+    if Grupo1_var.get():
+        sintoma = "Grupo1"
+    else:
+        print("El Checkbutton dolor cuadro_fiebre_tos_var no está seleccionado.")
+    if Grupo2_var.get():
+        sintoma = "Grupo2"
+    else:
+        print("El Checkbutton dolor cuadro_dolormuscular_var no está seleccionado.")
+    if Grupo3_var.get():
+        sintoma = "Grupo3"
+    else:
+        print("El Checkbutton dolor cuadro_nauseas_var no está seleccionado.")
+    if Grupo4_var.get():
+        sintoma = "Grupo4"
+    else:        
+        print("Pon algo")
+
+    tiempo = combo_tiempo.get()
+
+    # CONEXION CON LA BD PARA VER SI COINCIDEN LOS DATOS CON ALGO YA GUARDADO
+    conexion2 = mysql.connector.connect(user='root',password='root',
+                                    host='localhost',
+                                    database='se_database',
+                                    port='3306')
+    print(conexion2)
+    cursor2 = conexion2.cursor()
+
+    valores = (edad, factor_riesgo, sintoma, tiempo)
+
+    # Crea la consulta SQL para rescatar una imagen
+    consulta_respuesta = "SELECT resp FROM enf WHERE edad = %s AND factor_riesgo = %s AND sintomas = %s AND tiempo = %s"
+
+    # Ejecuta la consulta con los valores
+    cursor2.execute(consulta_respuesta, valores)
+
+    # Verificar si hay algún resultado
+    resultados = cursor2.fetchall()
+
+    # Limpiar el contenido actual del text_respuesta
+    text_respuesta.config(state=tk.NORMAL)
+    text_respuesta.delete('1.0', tk.END)
+
+    for resultado in resultados:
+        enfermedad, = resultado
+        print(enfermedad)
+
+        # Establecer un valor inicial
+        text_respuesta.insert(tk.END, f"Según los datos ingresados, puede tener: {enfermedad}\nNota. Se recomienda que busque atención médica para un diagnóstico adecuado y un tratamiento oportuno.")
+        break
+    else:
+        text_respuesta.insert(tk.END, f"Según los datos ingresados, puede tener: {enfermedad}\nNota. Se recomienda que busque atención médica para un diagnóstico adecuado y un tratamiento oportuno.")
+        break
 
     # Confirma la inserción de datos en la base de datos
     conexion2.commit()
