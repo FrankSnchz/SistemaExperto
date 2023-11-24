@@ -1,7 +1,6 @@
 from io import BytesIO
-import io
 import tkinter as tk
-from tkinter import PhotoImage, scrolledtext
+from tkinter import scrolledtext
 from tkinter import filedialog
 import mysql.connector
 from tkinter import ttk
@@ -46,7 +45,7 @@ def abrir_ventana_experto():
                                         port='3306')
         print(conexion)
         cursor = conexion.cursor()
-        """
+
         valores = (edad, factor_riesgo, sintoma, tiempo, respuesta, explicacion, imagen_blob)
 
         # Crea la consulta SQL para insertar un nuevo registro
@@ -55,16 +54,6 @@ def abrir_ventana_experto():
         # Ejecuta la consulta con los valores
         valores = (edad, factor_riesgo, sintoma, tiempo, respuesta, explicacion, imagen_blob)
         cursor.execute(consulta, valores)
-        """ 
-
-        # Crea la consulta SQL para insertar un nuevo registro        
-        consulta = "UPDATE enf SET img = %s WHERE resp = %s" 
-        enfermedad = "Diabetes"
-        # Ejecuta la consulta con los valores
-        valores = (imagen_blob, enfermedad)
-        cursor.execute(consulta, valores)
-
-
 
         # Confirma la inserción de datos en la base de datos
         conexion.commit()
@@ -416,6 +405,117 @@ def limpiar_casillas():
 
 
 
+imagen_pillow = Image.open("Logo.webp")
+
+# Definir el tamaño deseado
+nuevo_tamano = (200, 200)  # Cambia estos valores según tu preferencia
+
+# Redimensionar la imagen
+imagen_redimensionada = imagen_pillow.resize(nuevo_tamano)
+
+# Convertir la imagen a formato Tkinter
+imagen_tk = ImageTk.PhotoImage(imagen_redimensionada)
+
+# Crear un widget Label para mostrar la imagen
+etiqueta_imagen = tk.Label(ventana, image=imagen_tk)
+etiqueta_imagen.grid(row=7, rowspan=2, column=0, padx=(380,0))
+
+# MÉTODO PARA MOSTRAR LA IMAGEN
+def obtener_img():    
+    edad = combo_edad.get()
+    factor_riesgo = combo_factores_riesgo.get()
+
+    sintoma =""
+
+    if Grupo1_var.get():
+        sintoma = "Grupo1"
+    else:
+        print("El Checkbutton dolor cuadro_fiebre_tos_var no está seleccionado.")
+    if Grupo2_var.get():
+        sintoma = "Grupo2"
+    else:
+        print("El Checkbutton dolor cuadro_dolormuscular_var no está seleccionado.")
+    if Grupo3_var.get():
+        sintoma = "Grupo3"
+    else:
+        print("El Checkbutton dolor cuadro_nauseas_var no está seleccionado.")
+    if Grupo4_var.get():
+        sintoma = "Grupo4"
+    else:        
+        print("test")
+
+    tiempo = combo_tiempo.get()
+
+    # CONEXION CON LA BD PARA VER SI COINCIDEN LOS DATOS CON ALGO YA GUARDADO
+    conexion3 = mysql.connector.connect(user='root',password='root',
+                                    host='localhost',
+                                    database='se_database',
+                                    port='3306')
+    print(conexion3)
+    cursor3 = conexion3.cursor()
+
+    valores = (edad, factor_riesgo, sintoma, tiempo)
+
+    consulta_imagen = "SELECT img FROM enf WHERE edad = %s AND factor_riesgo = %s AND sintomas = %s AND tiempo = %s"
+
+    # Ejecuta la consulta con los valores
+    cursor3.execute(consulta_imagen, valores)
+
+    # Verificar si hay algún resultado
+    resultadoImg = cursor3.fetchone()
+
+    if resultadoImg is not None:
+        
+        imagen_bytes2 = resultadoImg[0]
+
+        # Abrir la imagen con Pillow
+        imagen_pillow2 = Image.open(BytesIO(imagen_bytes2))
+
+        # Redimensionar la imagen
+        imagen_redimensionada2 = imagen_pillow2.resize(nuevo_tamano)
+
+        # Convertir la imagen a formato Tkinter
+        imagen_tk2 = ImageTk.PhotoImage(imagen_redimensionada2)
+
+        # Actualizar la imagen en el widget Label
+        etiqueta_imagen.config(image=imagen_tk2)
+
+        # Mantener la referencia global a la imagen_tk para evitar que sea eliminada
+        etiqueta_imagen.image = imagen_tk2
+    else:
+
+        imagen_pillow = Image.open("Logo.webp")
+
+        # Redimensionar la imagen
+        imagen_redimensionada2 = imagen_pillow.resize(nuevo_tamano)
+
+        # Convertir la imagen a formato Tkinter
+        imagen_tk2 = ImageTk.PhotoImage(imagen_redimensionada2)
+
+        # Actualizar la imagen en el widget Label
+        etiqueta_imagen.config(image=imagen_tk2)
+
+        # Mantener la referencia global a la imagen_tk para evitar que sea eliminada
+        etiqueta_imagen.image = imagen_tk2
+
+
+
+
+
+    # Confirma la inserción de datos en la base de datos
+    conexion3.commit()
+
+    # Cierra el cursor y la conexión
+    cursor3.close()
+    conexion3.close()
+    ventana.update()
+
+def llamar_funciones():
+    obtener_consulta()
+    obtener_img()
+    
+
+
 
 # MÉTODO PARA MOSTRAR LA RESPUESTA
 def obtener_consulta():    
@@ -453,7 +553,6 @@ def obtener_consulta():
 
     valores = (edad, factor_riesgo, sintoma, tiempo)
 
-    # Crea la consulta SQL para rescatar una imagen
     consulta_existencia = "SELECT resp FROM enf WHERE edad = %s AND factor_riesgo = %s AND sintomas = %s AND tiempo = %s"
 
     # Ejecuta la consulta con los valores
@@ -472,9 +571,19 @@ def obtener_consulta():
 
         # Establecer un valor inicial
         text_respuesta.insert(tk.END, f"Según los datos ingresados, puede tener: {enfermedad}\nNota. Se recomienda que busque atención médica para un diagnóstico adecuado y un tratamiento oportuno.")
+
+        text_explicacion.config(state=tk.NORMAL)
+        text_explicacion.delete('1.0', tk.END)
+        text_explicacion.insert(tk.END, "")
+        text_explicacion.config(state=tk.DISABLED)
+
         break
     else:
-        print("No hay nada")
+        text_respuesta.insert(tk.END, f"No se encontró ninguna enfermedad asociada a sus síntomas, si requiere añadir información por favor vaya a la interfaz de experto")
+        text_explicacion.config(state=tk.NORMAL)
+        text_explicacion.delete('1.0', tk.END)
+        text_explicacion.insert(tk.END, "")
+        text_explicacion.config(state=tk.DISABLED)
 
     # Confirma la inserción de datos en la base de datos
     conexion2.commit()
@@ -486,109 +595,14 @@ def obtener_consulta():
     # Configurar el text_respuesta como de solo lectura
     text_respuesta.config(state=tk.DISABLED)
 
-
-
-
-
-
-# MÉTODO PARA MOSTRAR LA RESPUESTA
-def obtener_consulta():    
-    edad = combo_edad.get()
-    factor_riesgo = combo_factores_riesgo.get()
-
-    sintoma =""
-
-    if Grupo1_var.get():
-        sintoma = "Grupo1"
-    else:
-        print("El Checkbutton dolor cuadro_fiebre_tos_var no está seleccionado.")
-    if Grupo2_var.get():
-        sintoma = "Grupo2"
-    else:
-        print("El Checkbutton dolor cuadro_dolormuscular_var no está seleccionado.")
-    if Grupo3_var.get():
-        sintoma = "Grupo3"
-    else:
-        print("El Checkbutton dolor cuadro_nauseas_var no está seleccionado.")
-    if Grupo4_var.get():
-        sintoma = "Grupo4"
-    else:        
-        print("Pon algo")
-
-    tiempo = combo_tiempo.get()
-
-    # CONEXION CON LA BD PARA VER SI COINCIDEN LOS DATOS CON ALGO YA GUARDADO
-    conexion2 = mysql.connector.connect(user='root',password='root',
-                                    host='localhost',
-                                    database='se_database',
-                                    port='3306')
-    print(conexion2)
-    cursor2 = conexion2.cursor()
-
-    valores = (edad, factor_riesgo, sintoma, tiempo)
-
-    # Crea la consulta SQL para rescatar una imagen
-    consulta_respuesta = "SELECT resp FROM enf WHERE edad = %s AND factor_riesgo = %s AND sintomas = %s AND tiempo = %s"
-
-    # Ejecuta la consulta con los valores
-    cursor2.execute(consulta_respuesta, valores)
-
-    # Verificar si hay algún resultado
-    resultados = cursor2.fetchall()
-
-    # Limpiar el contenido actual del text_respuesta
-    text_respuesta.config(state=tk.NORMAL)
-    text_respuesta.delete('1.0', tk.END)
-
-    for resultado in resultados:
-        enfermedad, = resultado
-        print(enfermedad)
-
-        # Establecer un valor inicial
-        text_respuesta.insert(tk.END, f"Según los datos ingresados, puede tener: {enfermedad}\nNota. Se recomienda que busque atención médica para un diagnóstico adecuado y un tratamiento oportuno.")
-        break
-    else:
-        text_respuesta.insert(tk.END, f"Según los datos ingresados, puede tener: {enfermedad}\nNota. Se recomienda que busque atención médica para un diagnóstico adecuado y un tratamiento oportuno.")
-        break
-
-    # Confirma la inserción de datos en la base de datos
-    conexion2.commit()
-
-    # Cierra el cursor y la conexión
-    cursor2.close()
-    conexion2.close()
-
-    # Configurar el text_respuesta como de solo lectura
-    text_respuesta.config(state=tk.DISABLED)
-
-
-
-
-ruta_imagen = "imagen.jpg"
-
-imagen_pillow = Image.open(ruta_imagen)
-
-    
-# Definir el tamaño deseado
-nuevo_tamano = (200, 200)  # Cambia estos valores según tu preferencia
-
-# Redimensionar la imagen
-imagen_redimensionada = imagen_pillow.resize(nuevo_tamano)
-
-# Convertir la imagen a formato Tkinter
-imagen_tk = ImageTk.PhotoImage(imagen_redimensionada)
 
 # Boton Obtener consulta
-boton_consultar = ttk.Button(ventana, text="Obtener consulta", command=obtener_consulta)
+boton_consultar = ttk.Button(ventana, text="Obtener consulta", command=llamar_funciones)
 boton_consultar.grid(row=6, column=0, sticky ="w", pady= 5, padx=(220,0))
 
 # Boton Ver Explicación
 boton_consultar = ttk.Button(ventana, text="Ver explicación", command=mostrar_explicacion)
 boton_consultar.grid(row=6, column=0, sticky ="e", pady= 5, padx=(0,200))
-
-# Crear un widget Label para mostrar la imagen
-etiqueta_imagen = tk.Label(ventana, image=imagen_tk)
-etiqueta_imagen.grid(row=7, rowspan=2, column=0, padx=(380,0))
 
 # Botón realizar otra consulta
 boton_realizar_consulta = ttk.Button(ventana, text="Realizar otra consulta",command=limpiar_casillas)
@@ -597,7 +611,7 @@ boton_realizar_consulta.grid(row=9, column=0, padx=(20,0), sticky ="w")
 # Botón para abrir ventana experto
 boton_abrir_experto = ttk.Button(ventana, text="Entrar a Modo Experto", command=abrir_ventana_experto)
 boton_abrir_experto.grid(row=9, column=0, padx=(20,0))
- 
+
 ventana.mainloop()
 
 
